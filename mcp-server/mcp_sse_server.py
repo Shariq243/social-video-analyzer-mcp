@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Instagram Video Analyzer - MCP SSE Server
+Social Video Analyzer - MCP SSE Server
 HTTP/SSE transport for online MCP access
 
 This server exposes the MCP protocol over HTTP with Server-Sent Events (SSE)
@@ -150,8 +150,8 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="Instagram Video Analyzer MCP Server",
-    description="MCP server with SSE transport for Instagram video analysis",
+    title="Social Video Analyzer MCP Server",
+    description="MCP server for Instagram, Facebook, X, LinkedIn and TikTok video analysis",
     version="2.0.0",
     lifespan=lifespan
 )
@@ -410,7 +410,7 @@ def create_mcp_server() -> Server:
 async def root():
     """Root endpoint"""
     return {
-        "name": "Instagram Video Analyzer MCP Server",
+        "name": "Social Video Analyzer MCP Server",
         "version": "2.0.0",
         "transport": "SSE and Streamable HTTP",
         "backend": API_BASE_URL,
@@ -514,7 +514,7 @@ def main():
     """Run the MCP SSE server"""
     import uvicorn
 
-    logger.info("🚀 Starting Instagram Video Analyzer MCP SSE Server")
+    logger.info("🚀 Starting Social Video Analyzer MCP SSE Server")
     logger.info(f"📡 Backend API: {API_BASE_URL}")
     logger.info(f"🔒 Authentication: {'Enabled' if API_KEYS else 'Disabled (WARNING!)'}")
     logger.info(f"🌐 Server will listen on: http://127.0.0.1:{MCP_SERVER_PORT}")

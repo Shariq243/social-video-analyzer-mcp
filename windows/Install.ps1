@@ -1,7 +1,7 @@
 param([switch]$NoLaunch)
 $ErrorActionPreference = 'Stop'
 if ([Environment]::OSVersion.Version.Major -lt 10 -or -not [Environment]::Is64BitOperatingSystem) {
-    throw 'Insta Analyzer requires Windows 10 or Windows 11, 64-bit.'
+    throw 'Social Video Analyzer requires Windows 10 or Windows 11, 64-bit.'
 }
 if ($env:PROCESSOR_ARCHITECTURE -eq 'ARM64' -or $env:PROCESSOR_ARCHITEW6432 -eq 'ARM64') {
     throw 'This installer downloads x64 tools. Native ARM64 installation is not supported.'

@@ -1,5 +1,5 @@
 """
-Main FastAPI application for Instagram Video Analyzer.
+Main FastAPI application for Social Video Analyzer.
 """
 import logging
 from logging.handlers import RotatingFileHandler
@@ -37,7 +37,7 @@ async def lifespan(app: FastAPI):
     # Startup
     if len(settings.backend_api_key) < 32:
         raise RuntimeError('Set BACKEND_API_KEY to a random value of at least 32 characters, or use Windows Setup.')
-    logger.info("Starting Instagram Video Analyzer API")
+    logger.info("Starting Social Video Analyzer API")
     
     # Initialize database
     init_db()
@@ -46,13 +46,13 @@ async def lifespan(app: FastAPI):
     yield
     
     # Shutdown
-    logger.info("Shutting down Instagram Video Analyzer API")
+    logger.info("Shutting down Social Video Analyzer API")
 
 
 # Create FastAPI application
 app = FastAPI(
-    title="Instagram Video Analyzer",
-    description="AI-powered Instagram video analysis using Gemini API",
+    title="Social Video Analyzer",
+    description="AI video analysis for Instagram, Facebook, X, LinkedIn and TikTok using Gemini API",
     version="1.0.0",
     lifespan=lifespan
 )
@@ -76,7 +76,7 @@ app.include_router(jobs_router, prefix="/api")
 async def root():
     """Root endpoint."""
     return {
-        "message": "Instagram Video Analyzer API",
+        "message": "Social Video Analyzer API",
         "version": "1.0.0",
         "status": "running"
     }

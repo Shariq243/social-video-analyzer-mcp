@@ -1,7 +1,7 @@
 [project]
-name = "instagram-video-analyzer-mcp"
+name = "social-video-analyzer-mcp"
 version = "1.0.0"
-description = "MCP Server para análise de vídeos do Instagram usando IA"
+description = "Analyze public Instagram, Facebook, X, LinkedIn and TikTok videos using Gemini via MCP"
 authors = [
     {name = "Instagram Video Analyzer Team", email = "team@example.com"}
 ]
@@ -42,10 +42,10 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/your-org/instagram-video-analyzer-mcp"
-Repository = "https://github.com/your-org/instagram-video-analyzer-mcp"
-Documentation = "https://github.com/your-org/instagram-video-analyzer-mcp#readme"
-Issues = "https://github.com/your-org/instagram-video-analyzer-mcp/issues"
+Homepage = "https://github.com/Shariq243/social-video-analyzer-mcp"
+Repository = "https://github.com/Shariq243/social-video-analyzer-mcp"
+Documentation = "https://github.com/Shariq243/social-video-analyzer-mcp#readme"
+Issues = "https://github.com/Shariq243/social-video-analyzer-mcp/issues"
 
 [project.scripts]
 instagram-video-analyzer-mcp = "instagram_video_analyzer_mcp:main"

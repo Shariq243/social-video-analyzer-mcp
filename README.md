@@ -1,4 +1,17 @@
-# Insta Analyzer for Windows
+# Social Video Analyzer for Windows
+
+Analyze public videos from **Facebook, X (Twitter), LinkedIn, Instagram, and TikTok**
+using Gemini through MCP, with setup guides for ten AI applications.
+Facebook, X, LinkedIn and Instagram have completed real analysis tests. TikTok URLs
+are accepted, but the tested TikTok link currently fails at extraction because
+TikTok returns an unexpected webpage response; successful TikTok analysis is
+**not verified**. Availability depends on each platform and video.
+
+Project: [social-video-analyzer-mcp](https://github.com/Shariq243/social-video-analyzer-mcp).
+Formerly Insta Analyzer. Existing `insta-analyzer` client identifiers, encrypted
+settings directory, Windows startup entry and `analyze_instagram_video` tool name
+are retained for compatibility. An existing ChatGPT connection may still display
+Insta Analyzer; it uses the updated server.
 
 This is a Windows installer and automatic startup companion for the existing
 [Instagram Video Analyzer MCP](https://github.com/Morfeu333/instagram-video-analyzer-mcp).
@@ -102,7 +115,7 @@ local clients need only your Gemini key for this server; no OpenAI tunnel is nee
 Applying settings keeps unrelated settings and MCP servers. JSON comments and
 formatting are normalized. The original bytes are saved beside the file as
 `filename.insta-backup-<unique-id>`. To restore, close the client and copy the
-backup over the original. Malformed settings and conflicting Insta Analyzer
+backup over the original. Malformed settings and conflicting Social Video Analyzer
 entries are left untouched; review exported snippets manually for those files.
 Codex uses a managed TOML block that preserves the rest of the file.
 
@@ -119,9 +132,9 @@ their own runtime. No popularity ranking or universal compatibility is claimed.
    Palette, select `insta-analyzer`, and start it. Accept its trust prompt if
    shown. The server output view shows startup errors.
 4. Open Copilot Chat in Agent mode (or the current tool-enabled equivalent).
-   Enable Insta Analyzer in the tool picker. Ask: "Use Insta Analyzer
+   Enable Social Video Analyzer in the tool picker. Ask: "Use Social Video Analyzer
    get_system_stats and show the result."
-5. Ask: "Use Insta Analyzer to analyze this public Instagram Reel: <URL>.
+5. Ask: "Use Social Video Analyzer to analyze this public social video: <URL>.
    Poll the job until complete and summarize the result." Approve tool calls
    when prompted. Record the job ID/result or error for verification.
 
@@ -150,7 +163,7 @@ project environment. Installation requires an explicit client and target:
 Checks require the backend running and do not send a video to Gemini.
 Run regression checks with `python -m pytest windows mcp-server/tests -q`.
 
-Restart or reload the client and enable Insta Analyzer. These snippets contain
+Restart or reload the client and enable Social Video Analyzer. These snippets contain
 absolute paths and the local backend URL, never your API keys. Each client starts
 its own stdio MCP process; the launcher keeps the shared backend running. Export
 again after changing the backend port or installation directory. Other clients
@@ -160,7 +173,7 @@ the supported installer platform; macOS/Linux installation is not covered here.
 ## After restarting Windows
 
 Sign in normally. The backend (and tunnel in ChatGPT mode) starts in the background and reconnect.
-Open ChatGPT, enable Insta Analyzer, and paste a public Instagram Reel URL.
+Open ChatGPT, enable Social Video Analyzer, and paste a public video URL.
 There are no terminals to launch or keys to enter on each restart. The computer
 must be awake, signed in, and online for local analysis to work.
 
@@ -186,7 +199,7 @@ process environments, never command-line arguments or plugin manifests.
 Processes running as your Windows user can still access your local credentials.
 Backend/tunnel output is redacted and rotated. Existing `.env` files are not modified.
 
-Video files are retrieved through Instaloader and sent to Google's Gemini API for
+Video files are retrieved through Instaloader (Instagram) or yt-dlp (other platforms) and sent to Google's Gemini API for
 analysis. Local downloads, results, logs, and SQLite databases remain private and
 are excluded from release archives. Your Gemini/OpenAI account terms and usage
 charges apply. Some Instagram posts require login or may be rate limited.
@@ -208,7 +221,7 @@ Keep the upstream MIT LICENSE with any redistribution.
 The existing `analyze_instagram_video` tool accepts public HTTPS video links from
 Instagram, Facebook (including share/r and fb.watch), TikTok, LinkedIn and X/Twitter.
 The tool name and backend `instagram_url` field remain for existing clients and
-job history. Ask Insta Analyzer to analyze the link, then poll `get_job_status`.
+job history. Ask Social Video Analyzer to analyze the link, then poll `get_job_status`.
 Reconnect your AI client to refresh tool descriptions.
 
 Instagram keeps its Instaloader path. Other sites use pinned yt-dlp in a separate
@@ -228,4 +241,5 @@ regressions, including URL rejection, five-platform job flow, process deadline,
 size cleanup, and credential-free worker environments. The latest backend/MCP
 regression run passed 52 tests. Real Facebook, LinkedIn (including lnkd.in short
 links), and X videos completed download and Gemini analysis through the secure
-MCP tunnel. TikTok has not yet been verified with a real video on this installation.
+MCP tunnel. A real TikTok link was tested, but extraction failed with an unexpected webpage
+response. TikTok analysis is not verified; browser cookies are not imported.

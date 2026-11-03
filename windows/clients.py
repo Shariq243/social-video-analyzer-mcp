@@ -75,7 +75,7 @@ def merge_text(client, original, root, port):
             original = pattern.sub('', original)
         parsed = tomllib.loads(original)
         if NAME in parsed.get(section, {}):
-            raise ValueError('An unmanaged Insta Analyzer entry exists. Review the exported snippet manually.')
+            raise ValueError('An unmanaged Social Video Analyzer entry exists. Review the exported snippet manually.')
         result = original.rstrip() + '\n\n' + start + '\n' + snippet(client, root, port) + end + '\n'
         tomllib.loads(result)
         return result
@@ -87,7 +87,7 @@ def merge_text(client, original, root, port):
         raise ValueError('MCP server section must be an object.')
     new = json.loads(snippet(client, root, port))[section][NAME]
     if NAME in servers and servers[NAME] != new:
-        raise ValueError('An existing Insta Analyzer entry differs. Review the exported snippet manually.')
+        raise ValueError('An existing Social Video Analyzer entry differs. Review the exported snippet manually.')
     servers[NAME] = new
     return json.dumps(data, indent=2, ensure_ascii=False) + '\n'
 
@@ -145,7 +145,7 @@ def show_clients(root, port, state):
     from tkinter import ttk, filedialog, messagebox
     import threading
     window = tk.Toplevel()
-    window.title('Insta Analyzer — AI applications')
+    window.title('Social Video Analyzer — AI applications')
     window.geometry('850x540')
     panel = ttk.Frame(window, padding=18)
     panel.pack(fill='both', expand=True)

@@ -1,4 +1,4 @@
-"""Windows setup and login supervisor for the existing Insta Analyzer services.
+"""Windows setup and login supervisor for the existing Social Video Analyzer services.
 
 Credentials stay on this computer, encrypted with Windows DPAPI CurrentUser.
 No credentials are accepted as command-line arguments or written to profiles.
@@ -333,7 +333,7 @@ def supervise():
                         tunnel = spawn([str(client), "run", "--profile", "automatic", "--profile-dir", str(profiles)],
                                        tunnel_env, logger, "tunnel")
                         wait_ready(tunnel, settings.health_port, "/readyz", seconds=90)
-                        write_status("Ready — Insta Analyzer is connected")
+                        write_status("Ready — Social Video Analyzer is connected")
                     else:
                         write_status("Ready — local MCP clients can connect")
                     delay = 2
@@ -343,7 +343,7 @@ def supervise():
                         if settings.mode == "local":
                             write_status("Ready — local MCP clients can connect")
                         elif http_ok(settings.health_port, "/readyz"):
-                            write_status("Ready — Insta Analyzer is connected")
+                            write_status("Ready — Social Video Analyzer is connected")
                         else:
                             write_status("Tunnel reconnecting; checking network and account access...")
                         time.sleep(3)
@@ -375,12 +375,12 @@ def show_setup():
     from tkinter import ttk, messagebox
     import webbrowser
     window = tk.Tk()
-    window.title("Insta Analyzer — Setup & Status")
+    window.title("Social Video Analyzer — Setup & Status")
     window.geometry("650x820")
     window.minsize(650, 820)
     panel = ttk.Frame(window, padding=22)
     panel.pack(fill="both", expand=True)
-    ttk.Label(panel, text="Insta Analyzer", font=("Segoe UI", 20, "bold")).pack(anchor="w")
+    ttk.Label(panel, text="Social Video Analyzer", font=("Segoe UI", 20, "bold")).pack(anchor="w")
     ttk.Label(panel, text="Enter your own credentials once. Windows encrypts them for your account.",
               wraplength=590).pack(anchor="w", pady=(5, 12))
     existing = None

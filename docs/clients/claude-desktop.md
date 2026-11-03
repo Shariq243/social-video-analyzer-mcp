@@ -1,4 +1,4 @@
-# Claude Desktop: Insta Analyzer setup
+# Claude Desktop: Social Video Analyzer setup
 
 [Back to the main guide](../../README.md)
 
@@ -25,18 +25,18 @@ is a compatibility target and has not been tested on a real machine here.
    Custom profiles and portable installs can use another path; use the application's
    MCP settings to find it. The installer backs up existing files and preserves
    unrelated settings. JSON comments/formatting are normalized. Conflicting
-   Insta Analyzer entries are not overwritten automatically.
+   Social Video Analyzer entries are not overwritten automatically.
 5. Completely quit Claude Desktop, including its tray process, then reopen it. Check Settings > Developer for the local MCP server. Open a new chat and enable its tools. This guide is for the desktop application, not claude.ai in a browser.
 
 ## Test in the application
 
 First ask:
 
-> Use Insta Analyzer get_system_stats and show the result.
+> Use Social Video Analyzer get_system_stats and show the result.
 
 Then supply a public Instagram Reel or post URL:
 
-> Use Insta Analyzer to analyze this URL: <PUBLIC_INSTAGRAM_URL>. Poll the job until it completes, then summarize the analysis.
+> Use Social Video Analyzer to analyze this URL: <PUBLIC_VIDEO_URL>. Poll the job until it completes, then summarize the analysis.
 
 Approve tool calls as prompted. A job ID means processing started; poll
 `get_job_status` to obtain the result. Instagram can rate limit or require login;
@@ -46,7 +46,7 @@ Gemini failures can arise from an invalid key, quota or model availability.
 
 - No tools: confirm the selected configuration location, restart the application,
   and check its MCP output/status. Trust and organization policy can block tools.
-- Backend error: open Insta Analyzer Settings and wait for Ready. **Check MCP +
+- Backend error: open Social Video Analyzer Settings and wait for Ready. **Check MCP +
   backend** independently checks the server, not the application's own connection.
 - Existing configuration conflict: export the matching snippet from Setup and
   review it manually. To restore, close the client and copy its adjacent

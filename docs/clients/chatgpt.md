@@ -1,4 +1,4 @@
-# ChatGPT: private Insta Analyzer connection
+# ChatGPT: private Social Video Analyzer connection
 
 [Back to the main guide](../../README.md)
 
@@ -20,19 +20,19 @@ machine test. The computer runs the backend and must stay awake and online.
    and click **Save and start**. Leave automatic startup checked if desired. Keys
    are encrypted for your Windows user; do not paste them in a chat or commit them.
 5. Wait for **Ready**. In ChatGPT's custom MCP/app/plugin settings, add a custom
-   server named **Insta Analyzer**. Select the **Tunnel** connection option and
+   server named **Social Video Analyzer**. Select the **Tunnel** connection option and
    your tunnel ID. Do not paste a tunnel ID into a Server URL field.
 6. For this private tunnel flow, select **No authentication** in the app form:
    tunnel access is authenticated by the runtime key and workspace permissions.
    This does not make a public HTTP server unauthenticated. Install privately
-   and enable Insta Analyzer in a new conversation.
+   and enable Social Video Analyzer in a new conversation.
 7. If Tunnel or custom MCP creation is unavailable, check workspace eligibility
    and admin policy. This installer cannot enable a restricted account feature.
 
 ## Test
 
-Ask: "Use Insta Analyzer get_system_stats and show the result."
-Then ask: "Use Insta Analyzer to analyze <PUBLIC_INSTAGRAM_URL>. Poll the job
+Ask: "Use Social Video Analyzer get_system_stats and show the result."
+Then ask: "Use Social Video Analyzer to analyze <PUBLIC_VIDEO_URL>. Poll the job
 until complete and summarize its analysis." Approve tool calls as prompted.
 
 ## Restart and stop

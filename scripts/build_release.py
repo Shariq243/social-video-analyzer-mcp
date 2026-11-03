@@ -75,5 +75,5 @@ def build(destination):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--output", type=Path, default=ROOT / "dist" / "Insta-Analyzer-Windows.zip")
+    parser.add_argument("--output", type=Path, default=ROOT / "dist" / "Social-Video-Analyzer-Windows.zip")
     build(parser.parse_args().output)
