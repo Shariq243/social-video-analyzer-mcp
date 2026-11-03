@@ -175,12 +175,12 @@ def analyze_video(
     reserved = False
     scheduled = False
     try:
-        # Validate Instagram URL
-        from urllib.parse import urlparse
-        parsed = urlparse(request.instagram_url)
-        if parsed.scheme != "https" or parsed.hostname not in {"instagram.com", "www.instagram.com", "m.instagram.com", "instagr.am"}:
-            raise HTTPException(status_code=400, detail="Invalid Instagram URL")
-        
+        from ...services.instagram_downloader import platform_for_url
+        try:
+            platform_for_url(request.instagram_url)
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc))
+
         if request.analysis_type not in {"comprehensive", "summary", "transcription", "visual_description"}:
             raise HTTPException(status_code=400, detail="Invalid analysis type")
 

@@ -431,10 +431,12 @@ async def analyze_instagram_video(
         raise ValueError(f"Tipo de análise deve ser um de: {', '.join(VALID_ANALYSIS_TYPES)}")
     
     # Validar URL do Instagram
-    if not any(domain in url for domain in ["instagram.com", "instagr.am"]):
-        await ctx.error("URL não é do Instagram")
-        raise ValueError("URL deve ser do Instagram")
-    
+    import sys
+    from pathlib import Path
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+    from video_platforms import platform_for_url
+    platform_for_url(url)
+
     try:
         # Fazer requisição para API
         payload = {

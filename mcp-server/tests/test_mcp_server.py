@@ -109,7 +109,7 @@ class TestVideoAnalysis(TestMCPServer):
         with patch('instagram_video_analyzer_mcp.http_client', mock_http_client):
             from instagram_video_analyzer_mcp import analyze_instagram_video
             
-            with pytest.raises(ValueError, match="URL deve ser do Instagram"):
+            with pytest.raises(ValueError, match="public HTTPS video URL"):
                 await analyze_instagram_video(
                     url="https://youtube.com/watch?v=invalid",
                     analysis_type="comprehensive",

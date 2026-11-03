@@ -2,6 +2,7 @@
 Instagram video downloader service using Instaloader.
 """
 import os
+import sys
 import time
 import re
 import logging
@@ -14,6 +15,9 @@ from instaloader import Post
 
 from ..core.config import settings
 from ..security import redact
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
+from video_platforms import platform_for_url
 
 logger = logging.getLogger(__name__)
 
@@ -94,6 +98,10 @@ class InstagramDownloader:
             Tuple of (success, video_path, error_message)
         """
         try:
+            platform = platform_for_url(instagram_url)
+            if platform != 'instagram':
+                from .social_downloader import download_social_video
+                return download_social_video(instagram_url, output_dir, progress_callback)
             # Extract shortcode from URL
             shortcode = self.extract_shortcode_from_url(instagram_url)
             if not shortcode:

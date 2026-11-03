@@ -202,3 +202,29 @@ eligibility. The GitHub source installer does not claim directory approval.
 For maintainers, `scripts/build_release.py` creates a source ZIP from an explicit
 allowlist. It excludes private files and checks for known local credentials.
 Keep the upstream MIT LICENSE with any redistribution.
+
+## Public videos from five platforms
+
+The existing `analyze_instagram_video` tool accepts public HTTPS video links from
+Instagram, Facebook (including share/r and fb.watch), TikTok, LinkedIn and X/Twitter.
+The tool name and backend `instagram_url` field remain for existing clients and
+job history. Ask Insta Analyzer to analyze the link, then poll `get_job_status`.
+Reconnect your AI client to refresh tool descriptions.
+
+Instagram keeps its Instaloader path. Other sites use pinned yt-dlp in a separate
+process, selecting one video with combined audio/video without requiring FFmpeg.
+Live streams, playlists, private content and login-only videos are outside this
+feature. Browser cookies and account credentials are not imported. Some videos
+require login or are blocked by the site and return an error. Extractor availability
+is not proof of a successful real download on each platform.
+
+Existing size, concurrency, storage and submission limits remain. Social downloads
+have a process deadline including extraction and size checks during transfer.
+Failed partial files are removed. Download workers block non-public IP connections
+and do not receive provider credentials in their environment.
+
+Verification: 80 automated checks passed across Windows adapters and MCP/backend
+regressions, including URL rejection, five-platform job flow, process deadline,
+size cleanup, and credential-free worker environments. A real Facebook Reel
+completed download and Gemini analysis through the secure MCP tunnel. Actual
+TikTok, LinkedIn, and X downloads have not yet been verified on this installation.

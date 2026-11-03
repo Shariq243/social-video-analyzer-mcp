@@ -12,6 +12,7 @@ ROOT = Path(__file__).resolve().parents[1]
 def selected_files():
     files = {
         "Setup.cmd": ROOT / "Setup.cmd",
+        "video_platforms.py": ROOT / "video_platforms.py",
         "README.md": ROOT / "windows" / "README.md",
         "LICENSE": ROOT / "LICENSE",
         "SECURITY.md": ROOT / "SECURITY.md",

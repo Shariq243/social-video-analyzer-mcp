@@ -11,6 +11,7 @@ import asyncio
 import json
 import logging
 import os
+import sys
 import secrets
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -49,6 +50,8 @@ logger = logging.getLogger(__name__)
 
 # Configuration: process environment takes precedence; never load backend secrets here.
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(PROJECT_ROOT))
+from video_platforms import platform_for_url
 load_dotenv(PROJECT_ROOT / ".env.local")
 load_dotenv(Path(__file__).with_name(".env.sse"))
 API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:8000")
@@ -176,9 +179,7 @@ async def analyze_video_tool(url: str, analysis_type: str = "comprehensive", wai
     if analysis_type not in valid_types:
         raise ValueError(f"Invalid analysis_type. Must be one of: {', '.join(valid_types)}")
 
-    # Validate Instagram URL
-    if urlparse(url).scheme != "https" or urlparse(url).hostname not in {"instagram.com", "www.instagram.com", "m.instagram.com", "instagr.am"}:
-        raise ValueError("URL must be from Instagram")
+    platform_for_url(url)
 
     # Make API request
     payload = {
@@ -288,13 +289,13 @@ def create_mcp_server() -> Server:
         return [
             Tool(
                 name="analyze_instagram_video",
-                description="Start Instagram video analysis using AI. Returns a job_id promptly; call get_job_status until completed or failed, then read analysis_result.",
+                description="Analyze a public video from Instagram, Facebook, TikTok, LinkedIn, or X (Twitter) using AI. Returns a job_id promptly; call get_job_status until completed or failed, then read analysis_result.",
                 inputSchema={
                     "type": "object",
                     "properties": {
                         "url": {
                             "type": "string",
-                            "description": "Instagram video URL"
+                            "description": "Public HTTPS video URL from Instagram, Facebook, TikTok, LinkedIn, or X (Twitter)"
                         },
                         "analysis_type": {
                             "type": "string",
