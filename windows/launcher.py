@@ -8,7 +8,8 @@ from __future__ import annotations
 import argparse
 import ctypes
 from ctypes import wintypes
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
+import secrets
 import uuid
 import json
 import logging
@@ -41,8 +42,11 @@ class Settings:
     model: str = "gemini-3.6-flash"
     auto_start: bool = True
     mode: str = "chatgpt"
+    backend_key: str = field(default_factory=lambda: secrets.token_urlsafe(32))
 
     def validate(self):
+        if len(self.backend_key) < 32:
+            raise ValueError("The internal backend credential must have at least 32 characters.")
         if self.mode not in {"local", "chatgpt"}:
             raise ValueError("Choose local or ChatGPT mode.")
         if self.mode == "chatgpt" and not re.fullmatch(r"tunnel_[a-fA-F0-9]{32}", self.tunnel_id):
@@ -98,6 +102,8 @@ def load_settings(state=STATE) -> Settings:
     data = json.loads(crypt((state / "credentials.dpapi").read_bytes(), decrypt=True))
     settings = Settings(**data)
     settings.validate()
+    if "backend_key" not in data:
+        save_settings(settings, state)
     return settings
 
 
@@ -211,7 +217,7 @@ def safe_logger(settings):
     class Redact(logging.Filter):
         def filter(self, record):
             message = record.getMessage()
-            for secret in [settings.runtime_key, settings.gemini_key]:
+            for secret in [settings.runtime_key, settings.gemini_key, settings.backend_key]:
                 if secret:
                     message = message.replace(secret, "[REDACTED]")
             record.msg, record.args = message, ()
@@ -292,6 +298,7 @@ def supervise():
             logger = safe_logger(settings)
             env = dict(os.environ, GEMINI_API_KEY=settings.gemini_key,
                        GEMINI_MODEL=settings.model, CONTROL_PLANE_API_KEY=settings.runtime_key,
+                       BACKEND_API_KEY=settings.backend_key,
                        API_BASE_URL=f"http://127.0.0.1:{settings.backend_port}", PYTHONUTF8="1")
             backend_env = dict(env)
             backend_env.pop("CONTROL_PLANE_API_KEY", None)

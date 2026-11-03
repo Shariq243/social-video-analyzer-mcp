@@ -2,6 +2,7 @@
 Instagram video downloader service using Instaloader.
 """
 import os
+import time
 import re
 import logging
 from pathlib import Path
@@ -12,6 +13,7 @@ import instaloader
 from instaloader import Post
 
 from ..core.config import settings
+from ..security import redact
 
 logger = logging.getLogger(__name__)
 
@@ -121,8 +123,31 @@ class InstagramDownloader:
             # Set target directory
             self.loader.dirname_pattern = str(output_path)
             
-            # Download
-            self.loader.download_post(post, target=str(output_path))
+            # Bound the actual stream, including responses without Content-Length.
+            partial = output_path / (shortcode + ".part")
+            complete = output_path / (shortcode + ".mp4")
+            started = time.monotonic()
+            try:
+                with self.loader.context.get_raw(post.video_url) as response:
+                    length = response.headers.get("Content-Length")
+                    if length and int(length) > settings.max_file_size:
+                        raise ValueError("Video exceeds the configured size limit")
+                    total = 0
+                    with partial.open("wb") as stream:
+                        for chunk in response.iter_content(chunk_size=65536):
+                            if time.monotonic() - started > settings.download_timeout_seconds:
+                                raise TimeoutError("Video download exceeded its time limit")
+                            if progress_callback:
+                                progress_callback(0.5)
+                            total += len(chunk)
+                            if total > settings.max_file_size:
+                                raise ValueError("Video exceeds the configured size limit")
+                            stream.write(chunk)
+                    if not total:
+                        raise ValueError("Video is empty")
+                partial.replace(complete)
+            finally:
+                partial.unlink(missing_ok=True)
             
             if progress_callback:
                 progress_callback(0.9)
@@ -159,7 +184,7 @@ class InstagramDownloader:
             return True, video_path, None
             
         except Exception as e:
-            error_msg = f"Error downloading video: {str(e)}"
+            error_msg = redact(f"Error downloading video: {str(e)}")
             logger.error(error_msg)
             return False, None, error_msg
     

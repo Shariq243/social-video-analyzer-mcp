@@ -16,11 +16,13 @@ sys.path.insert(0, str(ROOT / 'mcp-server'))
 
 def test_analysis_survives_background_session_and_can_be_polled(tmp_path, monkeypatch):
     monkeypatch.setenv('GEMINI_API_KEY', 'test-no-network-key')
+    monkeypatch.setenv('BACKEND_API_KEY', 'test-backend-credential-at-least-32-characters')
     from app.main import app
     from app.core.database import Base, get_db
     from app.api.routes import video
     from app.services.file_manager import FileManager
     from app.core.config import settings
+    monkeypatch.setattr(settings, 'backend_api_key', 'test-backend-credential-at-least-32-characters')
 
     engine = create_engine('sqlite:///' + (tmp_path / 'jobs.db').as_posix(), connect_args={'check_same_thread': False})
     Base.metadata.create_all(engine)
@@ -42,7 +44,7 @@ def test_analysis_survives_background_session_and_can_be_polled(tmp_path, monkey
     monkeypatch.setattr(video.video_analyzer, 'analyze_video', lambda *a, **k: result)
     app.dependency_overrides[get_db] = isolated_db
     try:
-        with TestClient(app) as client:
+        with TestClient(app, base_url='http://127.0.0.1', headers={'X-Insta-Backend-Key': 'test-backend-credential-at-least-32-characters'}) as client:
             response = client.post('/api/video/analyze', json={'instagram_url': 'https://www.instagram.com/reel/fixture/', 'analysis_type': 'summary'})
             assert response.status_code == 200
             job_id = response.json()['job_id']

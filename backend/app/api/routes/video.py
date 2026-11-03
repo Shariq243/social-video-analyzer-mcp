@@ -2,6 +2,8 @@
 Video processing API routes.
 """
 import uuid
+import threading
+from pathlib import Path
 import asyncio
 import logging
 from datetime import datetime
@@ -12,6 +14,8 @@ from pydantic import BaseModel, HttpUrl
 
 from ...core.database import get_db, SessionLocal
 from ...models import VideoJob, JobStatus
+from ...core.config import settings
+from ...security import redact
 from ...services import InstagramDownloader, VideoAnalyzer, FileManager
 
 logger = logging.getLogger(__name__)
@@ -43,11 +47,15 @@ class JobStatusResponse(BaseModel):
 instagram_downloader = InstagramDownloader()
 video_analyzer = VideoAnalyzer()
 file_manager = FileManager()
+job_slots = threading.BoundedSemaphore(settings.max_concurrent_jobs)
 
 
 def process_video_job(job_id: str, instagram_url: str, analysis_type: str):
-    with SessionLocal() as db:
-        _process_video_job(job_id, instagram_url, analysis_type, db)
+    try:
+        with SessionLocal() as db:
+            _process_video_job(job_id, instagram_url, analysis_type, db)
+    finally:
+        job_slots.release()
 
 def _process_video_job(job_id: str, instagram_url: str, analysis_type: str, db: Session):
     """
@@ -92,7 +100,7 @@ def _process_video_job(job_id: str, instagram_url: str, analysis_type: str, db: 
         
         if not success:
             job.status = JobStatus.FAILED
-            job.error_message = error_msg
+            job.error_message = redact(error_msg)
             job.completed_at = datetime.utcnow()
             db.commit()
             logger.error(f"Video download failed for job {job_id}: {error_msg}")
@@ -142,7 +150,7 @@ def _process_video_job(job_id: str, instagram_url: str, analysis_type: str, db: 
         job = db.query(VideoJob).filter(VideoJob.job_id == job_id).first()
         if job and job.status != JobStatus.CANCELLED:
             job.status = JobStatus.FAILED
-            job.error_message = str(e)
+            job.error_message = redact(e)
             job.completed_at = datetime.utcnow()
             db.commit()
 
@@ -164,6 +172,8 @@ def analyze_video(
     Returns:
         Job information
     """
+    reserved = False
+    scheduled = False
     try:
         # Validate Instagram URL
         from urllib.parse import urlparse
@@ -173,6 +183,16 @@ def analyze_video(
         
         if request.analysis_type not in {"comprehensive", "summary", "transcription", "visual_description"}:
             raise HTTPException(status_code=400, detail="Invalid analysis type")
+
+        if not job_slots.acquire(blocking=False):
+            raise HTTPException(status_code=429, detail="All analysis slots are busy; try again later")
+        reserved = True
+
+        used = sum(path.stat().st_size for directory in [settings.upload_dir, settings.results_dir, settings.temp_dir]
+                   for path in Path(directory).rglob('*') if path.is_file())
+        # Leave room for every concurrently admitted download before accepting more.
+        if used + settings.max_file_size * settings.max_concurrent_jobs > settings.max_storage_bytes:
+            raise HTTPException(status_code=507, detail='Local storage budget reached; delete old jobs before retrying')
 
         # Generate job ID
         job_id = str(uuid.uuid4())
@@ -197,6 +217,7 @@ def analyze_video(
             request.analysis_type
         )
         
+        scheduled = True
         logger.info(f"Created video analysis job: {job_id}")
         
         return VideoAnalysisResponse(
@@ -210,6 +231,9 @@ def analyze_video(
     except Exception as e:
         logger.error(f"Error creating video analysis job: {e}")
         raise HTTPException(status_code=500, detail="Internal server error")
+    finally:
+        if reserved and not scheduled:
+            job_slots.release()
 
 
 @router.get("/status/{job_id}", response_model=JobStatusResponse)

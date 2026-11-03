@@ -2,6 +2,7 @@
 Main FastAPI application for Instagram Video Analyzer.
 """
 import logging
+from logging.handlers import RotatingFileHandler
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -9,19 +10,23 @@ from fastapi.responses import JSONResponse
 
 from .core.config import settings
 from .database import init_db
-from .api.routes import video_router, jobs_router
+from .security import BackendBoundary, SecretFilter
 
 # Configure logging
 logging.basicConfig(
     level=getattr(logging, settings.log_level.upper()),
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     handlers=[
-        logging.FileHandler(settings.log_file),
+        RotatingFileHandler(settings.log_file, maxBytes=2_000_000, backupCount=2, encoding='utf-8'),
         logging.StreamHandler()
     ]
 )
 
 logger = logging.getLogger(__name__)
+for handler in logging.getLogger().handlers:
+    handler.addFilter(SecretFilter())
+
+from .api.routes import video_router, jobs_router
 
 
 @asynccontextmanager
@@ -30,6 +35,8 @@ async def lifespan(app: FastAPI):
     Application lifespan manager.
     """
     # Startup
+    if len(settings.backend_api_key) < 32:
+        raise RuntimeError('Set BACKEND_API_KEY to a random value of at least 32 characters, or use Windows Setup.')
     logger.info("Starting Instagram Video Analyzer API")
     
     # Initialize database
@@ -60,6 +67,7 @@ app.add_middleware(
 )
 
 # Include routers
+app.add_middleware(BackendBoundary)
 app.include_router(video_router, prefix="/api")
 app.include_router(jobs_router, prefix="/api")
 

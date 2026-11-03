@@ -14,6 +14,7 @@ def selected_files():
         "Setup.cmd": ROOT / "Setup.cmd",
         "README.md": ROOT / "windows" / "README.md",
         "LICENSE": ROOT / "LICENSE",
+        "SECURITY.md": ROOT / "SECURITY.md",
         ".gitignore": ROOT / ".gitignore",
         "requirements-windows.txt": ROOT / "requirements-windows.txt",
         "requirements-dev.txt": ROOT / "requirements-dev.txt",

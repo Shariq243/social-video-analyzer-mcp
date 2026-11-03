@@ -98,6 +98,17 @@ async def verify_api_key(authorization: str = Header(None)) -> str:
 # FASTAPI APPLICATION
 # ============================================================================
 
+def backend_headers():
+    key = os.getenv("BACKEND_API_KEY", "")
+    root = Path(__file__).resolve().parents[1]
+    if not key and (root / ".insta-analyzer/credentials.dpapi").exists():
+        import sys
+        sys.path.insert(0, str(root / "windows"))
+        from launcher import load_settings
+        key = load_settings(root / '.insta-analyzer').backend_key
+    return {"X-Insta-Backend-Key": key} if key else {}
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application lifespan manager"""
@@ -110,6 +121,7 @@ async def lifespan(app: FastAPI):
     # Initialize HTTP client
     http_client = httpx.AsyncClient(
         base_url=API_BASE_URL,
+        headers=backend_headers(),
         timeout=httpx.Timeout(REQUEST_TIMEOUT),
         limits=httpx.Limits(max_connections=50, max_keepalive_connections=20)
     )
@@ -525,7 +537,7 @@ if __name__ == "__main__":
 
         async def run_stdio():
             global http_client
-            async with httpx.AsyncClient(base_url=API_BASE_URL, timeout=REQUEST_TIMEOUT) as client:
+            async with httpx.AsyncClient(base_url=API_BASE_URL, timeout=REQUEST_TIMEOUT, headers=backend_headers()) as client:
                 http_client = client
                 async with stdio_server() as streams:
                     await mcp_server.run(*streams, mcp_server.create_initialization_options())

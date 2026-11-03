@@ -10,6 +10,7 @@ from google import genai
 from google.genai import types
 
 from ..core.config import settings
+from ..security import redact
 
 logger = logging.getLogger(__name__)
 
@@ -58,6 +59,8 @@ class VideoAnalyzer:
 
             # Validate file is not empty
             file_size = os.path.getsize(video_path)
+            if file_size > settings.max_file_size:
+                raise ValueError("Video exceeds the configured size limit")
             if file_size == 0:
                 raise ValueError(f"Video file is empty: {video_path}")
 
@@ -99,7 +102,7 @@ class VideoAnalyzer:
                     wait_time += 3
                     logger.info(f"Waiting for file processing... ({wait_time}s/{max_wait}s)")
                 except Exception as e:
-                    logger.error(f"Error checking file status: {e}")
+                    logger.error("Provider file-status check failed (%s)", type(e).__name__)
                     break
 
             if wait_time >= max_wait:
@@ -141,7 +144,7 @@ class VideoAnalyzer:
             return analysis_result
             
         except Exception as e:
-            error_msg = f"Error analyzing video: {str(e)}".replace(settings.gemini_api_key, "[REDACTED]")
+            error_msg = redact(f"Error analyzing video: {str(e)}")
             logger.error(error_msg)
             raise Exception(error_msg)
     

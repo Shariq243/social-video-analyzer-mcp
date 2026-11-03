@@ -4,6 +4,12 @@ This is a Windows installer and automatic startup companion for the existing
 [Instagram Video Analyzer MCP](https://github.com/Morfeu333/instagram-video-analyzer-mcp).
 The original MIT license and attribution are preserved.
 
+Security update: the backend now requires an automatically generated internal
+credential, checks Host/Origin, redacts all backend log handlers, and bounds jobs
+and media downloads. See [security and upgrade instructions](SECURITY.md).
+When updating an existing installation, stop its services, update the source,
+run Setup and Save/start, then restart your AI client. Existing keys are kept.
+
 ## Choose your application
 
 Step-by-step guides: [ChatGPT](docs/clients/chatgpt.md),
