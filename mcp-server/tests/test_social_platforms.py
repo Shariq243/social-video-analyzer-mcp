@@ -78,3 +78,41 @@ def test_worker_result_and_oversize_cleanup(tmp_path, monkeypatch, oversized):
         assert not list(tmp_path.iterdir())
     else:
         assert Path(result[1]).read_bytes() == b'xxxx'
+
+
+@pytest.mark.parametrize('url,errors,expected_attempts,raises', [
+    ('https://vt.tiktok.com/fixture/', ['Unexpected response from webpage request', None], 2, False),
+    ('https://vt.tiktok.com/fixture/', ['Unexpected response from webpage request'] * 2, 2, True),
+    ('https://vt.tiktok.com/fixture/', ['Login required'], 1, True),
+    ('https://www.facebook.com/reel/123', ['Unexpected response from webpage request'], 1, True),
+])
+def test_worker_retries_only_tiktok_web_response(tmp_path, monkeypatch, url, errors, expected_attempts, raises):
+    import copy
+    import importlib.util
+    import socket
+    from types import SimpleNamespace
+    spec = importlib.util.spec_from_file_location('social_worker_fixture', ROOT / 'backend/app/services/social_worker.py')
+    worker = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(worker)
+    class DownloadError(Exception): pass
+    class MaxDownloadsReached(Exception): pass
+    attempts = []
+    class Downloader:
+        def __init__(self, options): attempts.append(copy.deepcopy(options))
+        def __enter__(self): return self
+        def __exit__(self, *args): pass
+        def download(self, urls):
+            error = errors[len(attempts) - 1]
+            if error: raise DownloadError(error)
+    # main installs its network guard; keep this test's socket class isolated.
+    monkeypatch.setattr(socket, 'socket', type('FixtureSocket', (), {'connect': lambda *a: None, 'connect_ex': lambda *a: 0}))
+    monkeypatch.setitem(sys.modules, 'yt_dlp', SimpleNamespace(YoutubeDL=Downloader))
+    monkeypatch.setitem(sys.modules, 'yt_dlp.utils', SimpleNamespace(DownloadError=DownloadError, MaxDownloadsReached=MaxDownloadsReached))
+    monkeypatch.setattr(sys, 'argv', ['worker', url, str(tmp_path), '100'])
+    if raises:
+        with pytest.raises(DownloadError): worker.main()
+    else:
+        worker.main()
+    assert len(attempts) == expected_attempts
+    if expected_attempts == 2:
+        assert attempts[0]['http_headers'] != attempts[1]['http_headers']

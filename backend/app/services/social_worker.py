@@ -3,6 +3,7 @@ import ipaddress
 import socket
 import sys
 from pathlib import Path
+from urllib.parse import urlsplit
 
 
 def main():
@@ -22,7 +23,7 @@ def main():
     socket.socket.connect = checked_connect
     socket.socket.connect_ex = checked_connect_ex
     from yt_dlp import YoutubeDL
-    from yt_dlp.utils import MaxDownloadsReached
+    from yt_dlp.utils import DownloadError, MaxDownloadsReached
     url, destination, limit = sys.argv[1], Path(sys.argv[2]), int(sys.argv[3])
     def progress(data):
         if max(data.get('downloaded_bytes', 0), data.get('total_bytes') or 0) > limit:
@@ -41,11 +42,32 @@ def main():
         'enable_file_urls': False, 'overwrites': False,
         'hls_prefer_native': True, 'external_downloader': {'default': 'native'},
     }
-    with YoutubeDL(options) as downloader:
+    # TikTok currently rejects yt-dlp's default UA with an unexpected webpage.
+    # A stable browser UA works with the existing Python request handlers; no
+    # browser cookies, native networking handler, or account login is needed.
+    if urlsplit(url).hostname in {'tiktok.com', 'www.tiktok.com', 'm.tiktok.com',
+                                 'vt.tiktok.com', 'vm.tiktok.com'}:
+        options['http_headers'] = {
+            'User-Agent': ('Mozilla/5.0 (Windows NT 10.0; Win64; x64) '
+                           'AppleWebKit/537.36 (KHTML, like Gecko) '
+                           'Chrome/143.0.0.0 Safari/537.36'),
+        }
+    attempts = 2 if 'http_headers' in options else 1
+    for attempt in range(attempts):
         try:
-            downloader.download([url])
+            with YoutubeDL(options) as downloader:
+                downloader.download([url])
+            break
         except MaxDownloadsReached:
-            pass
+            break
+        except DownloadError as exc:
+            if attempt + 1 == attempts or 'Unexpected response from webpage request' not in str(exc):
+                raise
+            # Retry only this extraction error, once, with a fresh cookie jar.
+            # The parent still enforces one deadline across both attempts.
+            options['http_headers']['User-Agent'] = (
+                'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:140.0) '
+                'Gecko/20100101 Firefox/140.0')
 
 
 if __name__ == '__main__':

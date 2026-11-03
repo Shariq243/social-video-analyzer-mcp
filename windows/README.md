@@ -2,10 +2,9 @@
 
 Analyze public videos from **Facebook, X (Twitter), LinkedIn, Instagram, and TikTok**
 using Gemini through MCP, with setup guides for ten AI applications.
-Facebook, X, LinkedIn and Instagram have completed real analysis tests. TikTok URLs
-are accepted, but the tested TikTok link currently fails at extraction because
-TikTok returns an unexpected webpage response; successful TikTok analysis is
-**not verified**. Availability depends on each platform and video.
+All five platforms have completed real download and Gemini analysis tests.
+TikTok uses a browser User-Agent and one bounded retry for its intermittent
+webpage-response error. Availability still depends on each platform and video.
 
 Project: [social-video-analyzer-mcp](https://github.com/Shariq243/social-video-analyzer-mcp).
 Formerly Insta Analyzer. Existing `insta-analyzer` client identifiers, encrypted
@@ -239,7 +238,9 @@ and do not receive provider credentials in their environment.
 Verification: automated checks cover Windows adapters and MCP/backend
 regressions, including URL rejection, five-platform job flow, process deadline,
 size cleanup, and credential-free worker environments. The latest backend/MCP
-regression run passed 52 tests. Real Facebook, LinkedIn (including lnkd.in short
+regression run passed 56 tests. Real Facebook, LinkedIn (including lnkd.in short
 links), and X videos completed download and Gemini analysis through the secure
-MCP tunnel. A real TikTok link was tested, but extraction failed with an unexpected webpage
-response. TikTok analysis is not verified; browser cookies are not imported.
+MCP tunnel. A real TikTok short link also completed download and Gemini analysis
+after the header/retry fix. No browser cookies or account login were supplied.
+The retry applies only to TikTok's unexpected-webpage extraction error, runs at
+most once, and shares the existing overall download deadline.
