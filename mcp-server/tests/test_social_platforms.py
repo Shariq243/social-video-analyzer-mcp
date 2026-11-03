@@ -16,6 +16,7 @@ from video_platforms import platform_for_url
     ('https://fb.watch/fixture/', 'facebook'),
     ('https://vm.tiktok.com/fixture/', 'tiktok'),
     ('https://www.linkedin.com/posts/fixture', 'linkedin'),
+    ('https://lnkd.in/p/fixture', 'linkedin'),
     ('https://x.com/example/status/123', 'x'),
     ('https://twitter.com/example/status/123', 'x'),
 ])

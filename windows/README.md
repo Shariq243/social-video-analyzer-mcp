@@ -223,8 +223,9 @@ have a process deadline including extraction and size checks during transfer.
 Failed partial files are removed. Download workers block non-public IP connections
 and do not receive provider credentials in their environment.
 
-Verification: 80 automated checks passed across Windows adapters and MCP/backend
+Verification: automated checks cover Windows adapters and MCP/backend
 regressions, including URL rejection, five-platform job flow, process deadline,
-size cleanup, and credential-free worker environments. A real Facebook Reel
-completed download and Gemini analysis through the secure MCP tunnel. Actual
-TikTok, LinkedIn, and X downloads have not yet been verified on this installation.
+size cleanup, and credential-free worker environments. The latest backend/MCP
+regression run passed 52 tests. Real Facebook, LinkedIn (including lnkd.in short
+links), and X videos completed download and Gemini analysis through the secure
+MCP tunnel. TikTok has not yet been verified with a real video on this installation.

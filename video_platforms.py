@@ -5,7 +5,7 @@ HOSTS = {
     'instagram': {'instagram.com', 'www.instagram.com', 'm.instagram.com', 'instagr.am'},
     'facebook': {'facebook.com', 'www.facebook.com', 'm.facebook.com', 'web.facebook.com', 'fb.watch'},
     'tiktok': {'tiktok.com', 'www.tiktok.com', 'm.tiktok.com', 'vm.tiktok.com', 'vt.tiktok.com'},
-    'linkedin': {'linkedin.com', 'www.linkedin.com'},
+    'linkedin': {'linkedin.com', 'www.linkedin.com', 'lnkd.in'},
     'x': {'x.com', 'www.x.com', 'twitter.com', 'www.twitter.com', 'mobile.twitter.com'},
 }
 
