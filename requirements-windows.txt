@@ -1,0 +1,14 @@
+# Tested together on CPython 3.13 (Windows). No global installs required.
+mcp==1.30.0
+fastapi==0.162.0
+uvicorn==0.54.0
+httpx==0.28.1
+pydantic==2.14.2
+pydantic-settings==2.16.2
+python-dotenv==1.2.4
+sqlalchemy==2.1.6
+instaloader==4.16
+google-genai==2.34.0
+aiofiles==25.1.0
+python-multipart==0.0.33
+pywin32==312; sys_platform == "win32"
