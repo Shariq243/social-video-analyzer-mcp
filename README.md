@@ -3,8 +3,7 @@
 Analyze public videos from **Facebook, X (Twitter), LinkedIn, Instagram, and TikTok**
 using Gemini through MCP, with setup guides for ten AI applications.
 All five platforms have completed real download and Gemini analysis tests.
-TikTok uses a browser User-Agent and one bounded retry for its intermittent
-webpage-response error. Availability still depends on each platform and video.
+
 
 Project: [social-video-analyzer-mcp](https://github.com/Shariq243/social-video-analyzer-mcp).
 Formerly Insta Analyzer. Existing `insta-analyzer` client identifiers, encrypted
