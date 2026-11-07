@@ -68,16 +68,19 @@ def _process_video_job(job_id: str, instagram_url: str, analysis_type: str, db: 
         db: Database session
     """
     try:
-        # Get job from database
-        job = db.query(VideoJob).filter(VideoJob.job_id == job_id).first()
-        if not job:
-            logger.error(f"Job not found: {job_id}")
+        # Claim the job only if it is still pending when the worker starts.
+        job_query = db.query(VideoJob).filter(VideoJob.job_id == job_id)
+        claimed = job_query.filter(VideoJob.status == JobStatus.PENDING).update(
+            {VideoJob.status: JobStatus.PROCESSING, VideoJob.started_at: datetime.utcnow()},
+            synchronize_session=False,
+        )
+        if not claimed:
+            db.rollback()
             return
-        
-        # Update job status to processing
-        job.status = JobStatus.PROCESSING
-        job.started_at = datetime.utcnow()
         db.commit()
+        job = job_query.first()
+        if not job or job.status != JobStatus.PROCESSING:
+            return
         
         logger.info(f"Starting video processing for job: {job_id}")
         
@@ -99,9 +102,15 @@ def _process_video_job(job_id: str, instagram_url: str, analysis_type: str, db: 
         )
         
         if not success:
-            job.status = JobStatus.FAILED
-            job.error_message = redact(error_msg)
-            job.completed_at = datetime.utcnow()
+            # Download cancellation uses the same unsuccessful return as errors.
+            job_query.filter(VideoJob.status == JobStatus.PROCESSING).update(
+                {
+                    VideoJob.status: JobStatus.FAILED,
+                    VideoJob.error_message: redact(error_msg),
+                    VideoJob.completed_at: datetime.utcnow(),
+                },
+                synchronize_session=False,
+            )
             db.commit()
             logger.error(f"Video download failed for job {job_id}: {error_msg}")
             return

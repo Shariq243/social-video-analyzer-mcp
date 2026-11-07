@@ -168,6 +168,54 @@ def test_storage_budget_releases_job_slot(runtime, tmp_path, monkeypatch):
     assert slots.acquire(blocking=False)
 
 
+@pytest.fixture
+def pending_job(runtime, tmp_path):
+    from sqlalchemy import create_engine
+    from sqlalchemy.orm import Session
+    from app.core.database import Base
+    from app.models import JobStatus, VideoJob
+
+    engine = create_engine('sqlite:///' + (tmp_path / 'jobs.db').as_posix())
+    Base.metadata.create_all(engine)
+    try:
+        with Session(engine) as db:
+            job = VideoJob(job_id='fixture-job', status=JobStatus.PENDING,
+                           instagram_url='https://www.instagram.com/reel/fixture/')
+            db.add(job)
+            db.commit()
+            yield db, job
+    finally:
+        engine.dispose()
+
+
+def test_cancelled_pending_job_never_starts(pending_job, monkeypatch):
+    import asyncio
+    from app.api.routes import jobs, video
+    from app.models import JobStatus
+
+    db, job = pending_job
+    download = Mock()
+    monkeypatch.setattr(video.instagram_downloader, 'download_video', download)
+    asyncio.run(jobs.cancel_job(job.job_id, db))
+    video._process_video_job(job.job_id, job.instagram_url, 'summary', db)
+    assert job.status == JobStatus.CANCELLED
+    download.assert_not_called()
+
+
+def test_failed_file_cleanup_keeps_job_available_for_retry(pending_job, monkeypatch):
+    import asyncio
+    from fastapi import HTTPException
+    from app.api.routes import jobs
+    from app.models import VideoJob
+
+    db, job = pending_job
+    monkeypatch.setattr(jobs.file_manager, 'cleanup_job_files', Mock(return_value=False))
+    with pytest.raises(HTTPException) as exc:
+        asyncio.run(jobs.delete_job(job.job_id, cleanup_files=True, db=db))
+    assert exc.value.status_code == 500
+    assert db.get(VideoJob, job.id) is not None
+
+
 def test_real_stdio_tool_reaches_authenticated_backend(tmp_path):
     import asyncio
     import os
@@ -185,7 +233,8 @@ def test_real_stdio_tool_reaches_authenticated_backend(tmp_path):
                DATABASE_URL='sqlite:///' + (tmp_path / 'test.db').as_posix(),
                UPLOAD_DIR=str(tmp_path / 'uploads'), RESULTS_DIR=str(tmp_path / 'results'),
                TEMP_DIR=str(tmp_path / 'temp'), LOG_FILE=str(tmp_path / 'backend.log'),
-               API_BASE_URL=f'http://127.0.0.1:{port}')
+                API_BASE_URL=f'http://127.0.0.1:{port}',
+                HTTP_PROXY='http://127.0.0.1:1', NO_PROXY='')
     child = subprocess.Popen([sys.executable, '-m', 'uvicorn', 'app.main:app', '--app-dir', str(ROOT / 'backend'),
                               '--host', '127.0.0.1', '--port', str(port)], cwd=ROOT, env=env,
                              stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)

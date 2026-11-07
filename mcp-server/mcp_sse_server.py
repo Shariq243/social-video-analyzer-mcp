@@ -112,6 +112,13 @@ def backend_headers():
     return {"X-Insta-Backend-Key": key} if key else {}
 
 
+def create_backend_client(base_url: str, **options) -> httpx.AsyncClient:
+    loopback = urlparse(base_url).hostname in {"localhost", "127.0.0.1", "::1"}
+    return httpx.AsyncClient(
+        base_url=base_url, headers=backend_headers(), trust_env=not loopback, **options
+    )
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application lifespan manager"""
@@ -122,9 +129,8 @@ async def lifespan(app: FastAPI):
     logger.info("Starting authenticated MCP server")
 
     # Initialize HTTP client
-    http_client = httpx.AsyncClient(
-        base_url=API_BASE_URL,
-        headers=backend_headers(),
+    http_client = create_backend_client(
+        API_BASE_URL,
         timeout=httpx.Timeout(REQUEST_TIMEOUT),
         limits=httpx.Limits(max_connections=50, max_keepalive_connections=20)
     )
@@ -538,7 +544,7 @@ if __name__ == "__main__":
 
         async def run_stdio():
             global http_client
-            async with httpx.AsyncClient(base_url=API_BASE_URL, timeout=REQUEST_TIMEOUT, headers=backend_headers()) as client:
+            async with create_backend_client(API_BASE_URL, timeout=REQUEST_TIMEOUT) as client:
                 http_client = client
                 async with stdio_server() as streams:
                     await mcp_server.run(*streams, mcp_server.create_initialization_options())

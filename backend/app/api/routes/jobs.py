@@ -134,8 +134,8 @@ async def delete_job(
             raise HTTPException(status_code=404, detail="Job not found")
         
         # Cleanup files if requested
-        if cleanup_files:
-            file_manager.cleanup_job_files(job_id, keep_results=False)
+        if cleanup_files and not file_manager.cleanup_job_files(job_id, keep_results=False):
+            raise HTTPException(status_code=500, detail="Job files could not be removed. Retry deletion.")
         
         # Delete job from database
         db.delete(job)

@@ -369,10 +369,9 @@ async def app_lifespan(server: FastMCP) -> AsyncIterator[Dict[str, Any]]:
     
     # Inicialização
     logger.info("🚀 Iniciando Instagram Video Analyzer MCP Server...")
-    from mcp_sse_server import backend_headers
-    http_client = httpx.AsyncClient(
-        base_url=API_BASE_URL,
-        headers=backend_headers(),
+    from mcp_sse_server import create_backend_client
+    http_client = create_backend_client(
+        API_BASE_URL,
         timeout=httpx.Timeout(REQUEST_TIMEOUT),
         limits=httpx.Limits(max_connections=10, max_keepalive_connections=5)
     )
