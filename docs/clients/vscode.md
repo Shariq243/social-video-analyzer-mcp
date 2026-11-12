@@ -58,7 +58,7 @@ Gemini failures can arise from an invalid key, quota or model availability.
 
 Maintainer-reported successful stats call and full Instagram analysis in VS Code Copilot.
 
-Generated configuration tests initialize real stdio MCP, discover five tools,
+Generated configuration tests initialize real stdio MCP, discover the MCP tools,
 and call a controlled backend. Each person supplies their own key; the shared
 repository and client configurations contain no maintainer credentials.
 

@@ -39,6 +39,7 @@ class VideoJob(Base):
     completed_at = Column(DateTime(timezone=True), nullable=True)
     
     analysis_type = Column(String(50), default="comprehensive")
+    media_type = Column(String(32), nullable=True)
 
     # Processing information
     download_progress = Column(Float, default=0.0)

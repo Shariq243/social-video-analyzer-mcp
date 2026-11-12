@@ -176,9 +176,9 @@ app.add_middleware(
 # MCP TOOL IMPLEMENTATIONS
 # ============================================================================
 
-async def analyze_video_tool(url: str, analysis_type: str = "comprehensive", wait: bool = False) -> Dict[str, Any]:
+async def analyze_video_tool(url: str, analysis_type: str = "comprehensive", wait: bool = False, *, analyze_post: bool = False) -> Dict[str, Any]:
     """Analyze an Instagram video"""
-    logger.info(f"🎬 Analyzing video: {url} (type: {analysis_type})")
+    logger.info("Submitting media analysis")
 
     # Validate analysis type
     valid_types = ["comprehensive", "summary", "transcription", "visual_description"]
@@ -193,6 +193,8 @@ async def analyze_video_tool(url: str, analysis_type: str = "comprehensive", wai
         "analysis_type": analysis_type
     }
 
+    if analyze_post:
+        payload["analyze_post"] = True
     response = await http_client.post("/api/video/analyze", json=payload)
 
     if response.status_code == 200:
@@ -204,13 +206,15 @@ async def analyze_video_tool(url: str, analysis_type: str = "comprehensive", wai
 
         # Wait for completion
         logger.info(f"⏳ Waiting for analysis completion: {job_id}")
-        final_result = await wait_for_completion(job_id)
+        final_status = await wait_for_completion(job_id)
+        if analyze_post:
+            return {"success": True, **final_status}
 
         return {
             "success": True,
             "job_id": job_id,
             "status": "completed",
-            "analysis": final_result
+            "analysis": final_status.get("analysis_result", {})
         }
     else:
         raise Exception(f"API error: {response.status_code} - {response.text}")
@@ -268,11 +272,13 @@ async def wait_for_completion(job_id: str, max_wait: int = 300) -> Dict[str, Any
             status = status_data.get("status")
 
             if status == "completed":
-                return status_data.get("analysis_result", {})
+                return status_data
             elif status == "failed":
                 error = status_data.get("error_message", "Unknown error")
                 raise Exception(f"Analysis failed: {error}")
 
+            if status == "cancelled":
+                raise ValueError("Analysis was cancelled")
             await asyncio.sleep(5)
             waited += 5
         else:
@@ -292,7 +298,7 @@ def create_mcp_server() -> Server:
     # Register tools
     @server.list_tools()
     async def list_tools() -> List[Tool]:
-        return [
+        tools = [
             Tool(
                 name="analyze_instagram_video",
                 description="Analyze a public video from Instagram, Facebook, TikTok, LinkedIn, or X (Twitter) using AI. Returns a job_id promptly; call get_job_status until completed or failed, then read analysis_result.",
@@ -371,15 +377,29 @@ def create_mcp_server() -> Server:
             )
         ]
 
+        video_schema = tools[0].inputSchema
+        post_schema = {**video_schema, "properties": {**video_schema["properties"],
+            "url": {"type": "string", "description": "Public HTTPS post URL on Instagram, Facebook, TikTok, LinkedIn, or X"}}}
+        tools.insert(1, Tool(
+            name="analyze_instagram_post",
+            description=("Analyze public posts across Instagram, Facebook, TikTok, LinkedIn and X. "
+                         "Supports Instagram images, videos and ordered carousels. Other platforms support "
+                         "videos and accessible public preview images. Transcription requires video audio. "
+                         "Returns a job ID for get_job_status."),
+            inputSchema=post_schema,
+        ))
+        return tools
+
     @server.call_tool()
     async def call_tool(name: str, arguments: dict) -> List[TextContent | ImageContent | EmbeddedResource]:
         """Handle tool calls"""
         try:
-            if name == "analyze_instagram_video":
+            if name in {"analyze_instagram_video", "analyze_instagram_post"}:
                 result = await analyze_video_tool(
                     arguments.get("url"),
                     arguments.get("analysis_type", "comprehensive"),
-                    arguments.get("wait", False)
+                    arguments.get("wait", False),
+                    analyze_post=name == "analyze_instagram_post",
                 )
             elif name == "get_job_status":
                 result = await get_job_status_tool(arguments.get("job_id"))

@@ -22,6 +22,49 @@ and media downloads. See [security and upgrade instructions](SECURITY.md).
 When updating an existing installation, stop its services, update the source,
 run Setup and Save/start, then restart your AI client. Existing keys are kept.
 
+## Analyze public posts, images and carousels
+
+Call `analyze_instagram_post` with a public URL from Instagram, Facebook,
+TikTok, LinkedIn or X. Keep `wait=false` and poll `get_job_status` with the
+returned ID. The job status includes progress, detected media type and structured
+results. The existing `analyze_instagram_video` tool handles video-only requests.
+
+| Platform | Media available through the post tool |
+| --- | --- |
+| Instagram | Public Reels and videos, single images, and ordered carousels of up to 20 items, including mixed image/video posts |
+| Facebook, TikTok, LinkedIn, X | Public videos and, when video extraction fails, a publicly available Open Graph image labeled `image_preview` |
+
+Instagram uses an anonymous session for the post tool. If a post is restricted,
+removed, or inaccessible, the job reports an access error. Instagram results
+include the caption when available, the original media count, and the original
+slide numbers. Unavailable slides are labeled. Transcription requires video audio
+and skips image slides in a mixed carousel. External previews may show a cover
+or thumbnail and provide a single image rather than a complete carousel.
+
+### Local image model
+
+Start Ollama on your PC and run `ollama pull moondream` once. The backend uses
+`moondream:latest` by default and processes one image at a time. To use a different
+installed vision model, set `OLLAMA_VISION_MODEL=gemma3:4b` in `backend/.env` or
+the backend process environment. Leave Ollama on loopback. The default port is
+11434 and can be changed with `OLLAMA_PORT`. The vision model describes visible
+content and quotes readable text when it can. Review its reading for accuracy.
+
+Video and transcription still use the existing Gemini configuration. For local,
+visual-only video analysis through the post tool, put `ffmpeg` and `ffprobe` on
+PATH, set `OLLAMA_VIDEO_FRAMES=4`, and request `visual_description`. Set 1–6
+frames. The result preserves each sampled timestamp and describes those frames.
+Other video modes still send full audio and video to the configured Gemini model.
+
+### Apply and verify an upgrade
+
+Stop the existing app with `windows/Stop.cmd`, update the source, then use
+`windows/Start.cmd` or the existing setup window. Startup adds a nullable media
+field to the existing SQLite job table. If ChatGPT still shows the old tool list,
+reconnect the existing MCP server and open a new conversation. Ask it to call
+`analyze_instagram_post` with a public image or carousel URL and `wait=false`,
+then poll `get_job_status` for the result.
+
 ## Choose your application
 
 Step-by-step guides: [ChatGPT](docs/clients/chatgpt.md),
@@ -144,7 +187,7 @@ Organizational policy may disable MCP or tool use. See the
 
 All nine local adapters have automated tests for parsing, merging, backup,
 repeat installation, conflict protection, real stdio MCP initialization,
-five-tool discovery, and a tool call to a controlled HTTP backend. Tests read
+tool discovery, and a tool call to a controlled HTTP backend. Tests read
 the generated client-specific configuration; they do not run the client programs.
 **Check MCP + backend** in the setup window performs the same independent
 connectivity check against your running backend. It is explicitly labeled

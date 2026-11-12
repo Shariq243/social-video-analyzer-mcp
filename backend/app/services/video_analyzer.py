@@ -298,7 +298,12 @@ class VideoAnalyzer:
             """
         }
         
-        return prompts.get(analysis_type, prompts["comprehensive"])
+        return prompts.get(analysis_type, prompts["comprehensive"]) + (
+            "\nUse frames in their original order and label scene boundaries with observed timestamps. "
+            "Attribute on-screen text and speech to the correct scene. Keep audio, visible text, and "
+            "visual observations distinct before combining them. Mark uncertain times, unreadable text, "
+            "or missing audio instead of guessing."
+        )
     
     def _parse_analysis_response(self, response_text: str, analysis_type: str) -> Dict[str, Any]:
         """

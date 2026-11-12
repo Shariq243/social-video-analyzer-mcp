@@ -26,11 +26,14 @@ router = APIRouter(prefix="/video", tags=["video"])
 class VideoAnalysisRequest(BaseModel):
     instagram_url: str
     analysis_type: str = "comprehensive"
+    analyze_post: bool = False
 
 class VideoAnalysisResponse(BaseModel):
     job_id: str
     status: str
     message: str
+    progress: float = 0.0
+    media_type: Optional[str] = None
 
 class JobStatusResponse(BaseModel):
     job_id: str
@@ -41,6 +44,7 @@ class JobStatusResponse(BaseModel):
     completed_at: Optional[str]
     error_message: Optional[str]
     analysis_result: Optional[dict]
+    media_type: Optional[str] = None
 
 
 # Global service instances
@@ -50,14 +54,14 @@ file_manager = FileManager()
 job_slots = threading.BoundedSemaphore(settings.max_concurrent_jobs)
 
 
-def process_video_job(job_id: str, instagram_url: str, analysis_type: str):
+def process_video_job(job_id: str, instagram_url: str, analysis_type: str, analyze_post: bool = False):
     try:
         with SessionLocal() as db:
-            _process_video_job(job_id, instagram_url, analysis_type, db)
+            _process_video_job(job_id, instagram_url, analysis_type, db, analyze_post)
     finally:
         job_slots.release()
 
-def _process_video_job(job_id: str, instagram_url: str, analysis_type: str, db: Session):
+def _process_video_job(job_id: str, instagram_url: str, analysis_type: str, db: Session, analyze_post: bool = False):
     """
     Background task to process video analysis job.
     
@@ -95,33 +99,6 @@ def _process_video_job(job_id: str, instagram_url: str, analysis_type: str, db: 
             job.download_progress = progress
             db.commit()
         
-        success, video_path, error_msg = instagram_downloader.download_video(
-            instagram_url, 
-            str(job_dir),
-            progress_callback=download_progress
-        )
-        
-        if not success:
-            # Download cancellation uses the same unsuccessful return as errors.
-            job_query.filter(VideoJob.status == JobStatus.PROCESSING).update(
-                {
-                    VideoJob.status: JobStatus.FAILED,
-                    VideoJob.error_message: redact(error_msg),
-                    VideoJob.completed_at: datetime.utcnow(),
-                },
-                synchronize_session=False,
-            )
-            db.commit()
-            logger.error(f"Video download failed for job {job_id}: {error_msg}")
-            return
-        
-        # Update job with video info
-        job.video_path = video_path
-        video_info = file_manager.get_video_info(video_path)
-        job.video_size = video_info.get("size", 0)
-        job.video_filename = video_info.get("filename", "")
-        db.commit()
-        
         # Analyze video
         def analysis_progress(progress: float):
             db.refresh(job)
@@ -130,11 +107,53 @@ def _process_video_job(job_id: str, instagram_url: str, analysis_type: str, db: 
             job.analysis_progress = progress
             db.commit()
         
-        analysis_result = video_analyzer.analyze_video(
-            video_path,
-            analysis_type,
-            progress_callback=analysis_progress
-        )
+        def detected(media_type):
+            db.refresh(job)
+            if job.status == JobStatus.CANCELLED:
+                raise RuntimeError("Job cancelled")
+            job.media_type = media_type
+            db.commit()
+
+        if analyze_post:
+            from ...services.post_analysis import analyze_public_post
+            analysis_result = analyze_public_post(
+                instagram_url, job_dir, analysis_type, video_analyzer,
+                download_progress, analysis_progress, detected,
+            )
+        else:
+            success, video_path, error_msg = instagram_downloader.download_video(
+                instagram_url,
+                str(job_dir),
+                progress_callback=download_progress
+            )
+
+            if not success:
+                # Download cancellation uses the same unsuccessful return as errors.
+                job_query.filter(VideoJob.status == JobStatus.PROCESSING).update(
+                    {
+                        VideoJob.status: JobStatus.FAILED,
+                        VideoJob.error_message: redact(error_msg),
+                        VideoJob.completed_at: datetime.utcnow(),
+                    },
+                    synchronize_session=False,
+                )
+                db.commit()
+                logger.error(f"Video download failed for job {job_id}: {error_msg}")
+                return
+
+            # Update job with video info
+            job.video_path = video_path
+            video_info = file_manager.get_video_info(video_path)
+            job.video_size = video_info.get("size", 0)
+            job.video_filename = video_info.get("filename", "")
+            db.commit()
+
+            detected("video")
+            analysis_result = video_analyzer.analyze_video(
+                video_path,
+                analysis_type,
+                progress_callback=analysis_progress
+            )
         
         db.refresh(job)
         if job.status == JobStatus.CANCELLED:
@@ -223,7 +242,8 @@ def analyze_video(
             process_video_job,
             job_id,
             request.instagram_url,
-            request.analysis_type
+            request.analysis_type,
+            request.analyze_post,
         )
         
         scheduled = True
@@ -286,7 +306,8 @@ async def get_job_status(job_id: str, db: Session = Depends(get_db)):
             started_at=job.started_at.isoformat() if job.started_at else None,
             completed_at=job.completed_at.isoformat() if job.completed_at else None,
             error_message=job.error_message,
-            analysis_result=analysis_result
+            analysis_result=analysis_result,
+            media_type=job.media_type,
         )
         
     except HTTPException:

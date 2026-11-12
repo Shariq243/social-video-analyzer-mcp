@@ -192,7 +192,7 @@ def test_generated_clients_initialize_and_call_backend(tmp_path):
             async with ClientSession(read, write) as session:
                 await session.initialize()
                 tools = await session.list_tools()
-                assert len(tools.tools) == 5
+                assert len(tools.tools) == 6
                 result = await session.call_tool("get_system_stats", {})
                 assert not result.isError
                 assert '7' in result.content[0].text

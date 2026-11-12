@@ -58,7 +58,7 @@ Gemini failures can arise from an invalid key, quota or model availability.
 
 Automated configuration/protocol tests passed; real analysis inside this application has not yet been verified.
 
-Generated configuration tests initialize real stdio MCP, discover five tools,
+Generated configuration tests initialize real stdio MCP, discover the MCP tools,
 and call a controlled backend. Each person supplies their own key; the shared
 repository and client configurations contain no maintainer credentials.
 

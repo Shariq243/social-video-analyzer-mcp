@@ -89,7 +89,7 @@ def test_all_nine_exported_commands_initialize_list_tools_and_call_backend(tmp_p
             assert set(config['env']) == {'API_BASE_URL'}
             result = asyncio.run(clients.check_connection(config))
             assert result['protocol'] == result['backend_tool'] == 'passed'
-            assert len(result['tools']) == 5
+            assert len(result['tools']) == 6
             assert result['inside_application'] == 'not tested'
         assert paths == ['/api/jobs/stats'] * 9
     finally:

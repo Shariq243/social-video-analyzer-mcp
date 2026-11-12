@@ -243,7 +243,7 @@ def test_real_stdio_tool_reaches_authenticated_backend(tmp_path):
                 args=[str(ROOT / 'mcp-server/mcp_sse_server.py'), '--stdio'], env=env)) as streams:
             async with ClientSession(*streams) as session:
                 await session.initialize()
-                assert len((await session.list_tools()).tools) == 5
+                assert len((await session.list_tools()).tools) == 6
                 result = await session.call_tool('get_system_stats', {})
                 assert not result.isError
                 assert json.loads(result.content[0].text)['total_jobs'] == 0

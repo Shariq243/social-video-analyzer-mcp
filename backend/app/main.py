@@ -23,6 +23,8 @@ logging.basicConfig(
 )
 
 logger = logging.getLogger(__name__)
+# Provider URLs can carry signed media query parameters.
+logging.getLogger('httpx').setLevel(logging.WARNING)
 for handler in logging.getLogger().handlers:
     handler.addFilter(SecretFilter())
 
@@ -52,7 +54,7 @@ async def lifespan(app: FastAPI):
 # Create FastAPI application
 app = FastAPI(
     title="Social Video Analyzer",
-    description="AI video analysis for Instagram, Facebook, X, LinkedIn and TikTok using Gemini API",
+    description="Public social post and video analysis with Ollama vision and Gemini video analysis",
     version="1.0.0",
     lifespan=lifespan
 )

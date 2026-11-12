@@ -28,7 +28,7 @@ async def check_session(streams, label, analyze_url=None):
             assert not result.isError, name + ' could not reach backend'
         invalid = await session.call_tool('analyze_instagram_video', {'url': 'https://example.com/instagram.com/reel/fake/'})
         assert invalid.isError
-        print(label + ': initialized, five tools discovered, backend calls passed, invalid URL rejected', flush=True)
+        print(label + ': initialized, MCP tools discovered, backend calls passed, invalid URL rejected', flush=True)
         if analyze_url:
             result = await session.call_tool('analyze_instagram_video', {'url': analyze_url, 'analysis_type': 'summary'})
             assert not result.isError, 'Analysis submission failed'

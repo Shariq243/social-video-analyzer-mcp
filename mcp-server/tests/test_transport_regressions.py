@@ -78,7 +78,7 @@ def test_streamable_http_wire_protocol_and_authentication(monkeypatch):
         assert response.status_code == 200
         assert response.json()['result']['capabilities']['tools'] is not None
         response = client.post('/mcp', headers=headers, json={'jsonrpc': '2.0', 'id': 2, 'method': 'tools/list', 'params': {}})
-        assert len(response.json()['result']['tools']) == 5
+        assert len(response.json()['result']['tools']) == 6
     monkeypatch.setattr(server, 'API_KEYS', [])
     with pytest.raises(RuntimeError, match='MCP_API_KEYS'):
         with TestClient(server.app):

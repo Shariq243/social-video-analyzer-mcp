@@ -1,7 +1,7 @@
 """
 Database configuration and session management.
 """
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, inspect, text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session
 from typing import Generator
@@ -36,4 +36,9 @@ def create_tables():
     """
     Create all tables in the database.
     """
-    Base.metadata.create_all(bind=engine)
+    with engine.begin() as connection:
+        if connection.dialect.name == 'sqlite':
+            connection.exec_driver_sql('BEGIN IMMEDIATE')
+        Base.metadata.create_all(bind=connection)
+        if 'media_type' not in {column['name'] for column in inspect(connection).get_columns('video_jobs')}:
+            connection.execute(text('ALTER TABLE video_jobs ADD COLUMN media_type VARCHAR(32)'))

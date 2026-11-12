@@ -49,3 +49,7 @@ maintainer's machine. Every user creates their own connection and supplies their
 own credentials. The repository does not share the maintainer's plugin or quota.
 Video content is sent to Gemini for analysis. Public Instagram access can fail
 due to rate limits or login requirements; provider quota/usage charges apply.
+
+For images and carousels, call `analyze_instagram_post` with `wait=false`, then
+use `get_job_status` to read the result. Refresh the existing connection if this
+tool is missing from ChatGPT. See the root README for Ollama setup.

@@ -22,9 +22,13 @@ def main():
         return original_connect_ex(sock, address)
     socket.socket.connect = checked_connect
     socket.socket.connect_ex = checked_connect_ex
+    url, destination, limit = sys.argv[1], Path(sys.argv[2]), int(sys.argv[3])
+    if sys.argv[4:] == ['preview']:
+        from social_preview import download_preview
+        download_preview(url, destination, limit)
+        return
     from yt_dlp import YoutubeDL
     from yt_dlp.utils import DownloadError, MaxDownloadsReached
-    url, destination, limit = sys.argv[1], Path(sys.argv[2]), int(sys.argv[3])
     def progress(data):
         if max(data.get('downloaded_bytes', 0), data.get('total_bytes') or 0) > limit:
             raise ValueError('Video size limit exceeded')

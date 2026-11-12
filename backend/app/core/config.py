@@ -37,6 +37,9 @@ class Settings(BaseSettings):
     max_submissions_per_minute: int = Field(default=5, ge=1)
     backend_api_key: str = ''
     max_storage_bytes: int = Field(default=1_000_000_000, ge=1)
+    ollama_vision_model: str = 'moondream:latest'
+    ollama_port: int = Field(default=11434, ge=1, le=65535)
+    ollama_video_frames: int = Field(default=0, ge=0, le=6)
     
     # Instagram Configuration
     instagram_username: Optional[str] = None
